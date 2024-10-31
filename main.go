@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gadisamenu/hotel-reservation/api"
+	"github.com/gadisamenu/hotel-reservation/api/middlewares"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,13 +30,15 @@ func main() {
 	}
 
 	app := fiber.New(config)
-	appv1 := app.Group("/api/v1")
+	auth := app.Group("/api")
+	appv1 := app.Group("/api/v1", middlewares.JWTAuthentication)
 
 	// handlers initialization
 	userStore := db.NewMongoUserStore(client)
 	userHanlder := api.NewUserHandler(userStore)
 	hotelStore := db.NewMongoHotelStore(client)
 	roomStore := db.NewMongoRoomStore(client, hotelStore)
+	authHandler := api.NewAuthHandler(userStore)
 
 	store := &db.Store{
 		Hotel: hotelStore,
@@ -43,6 +46,9 @@ func main() {
 		User:  userStore,
 	}
 	hotelHandler := api.NewHotelHandler(store)
+
+	// auth handlers
+	auth.Post("/auth", authHandler.HandleAuthenticate)
 
 	// user handlers
 	appv1.Delete("/users/:id", userHanlder.HandleDeleteUser)
