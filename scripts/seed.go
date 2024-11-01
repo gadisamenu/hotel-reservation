@@ -25,7 +25,7 @@ func seedUser(fname string, lname string, email string) {
 		FirstName: fname,
 		LastName:  lname,
 		Email:     email,
-		Password:  "12341234",
+		Password:  "password",
 	}
 
 	user, err := param.MapToUser()
