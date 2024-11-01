@@ -5,38 +5,50 @@ import (
 	"os"
 	"time"
 
+	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTAuthentication(c *fiber.Ctx) error {
-	token, ok := c.GetReqHeaders()["X-Api-Token"]
+func JWTAuthentication(userStore db.UserStore) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		token, ok := c.GetReqHeaders()["X-Api-Token"]
 
-	if !ok {
-		return fmt.Errorf("unauthorized")
+		if !ok {
+			return fmt.Errorf("unauthorized")
+		}
+		claims, err := validateToken(token[0])
+
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("unauthorized")
+		}
+
+		expiration := claims["expires"].(string)
+		layout := "2006-01-02T15:04:05.999999999-07:00"
+		expTime, err := time.Parse(layout, expiration)
+
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("unauthorized")
+		}
+
+		if time.Now().After(expTime) {
+			return fmt.Errorf("token expired")
+		}
+
+		userId := claims["id"].(string)
+
+		user, err := userStore.GetUserByID(c.Context(), userId)
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("unauthorized")
+		}
+
+		c.Context().SetUserValue("user", user)
+		return c.Next()
 	}
-	claims, err := validateToken(token[0])
-
-	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("unauthorized")
-	}
-
-	expiration := claims["expires"].(string)
-	layout := "2006-01-02T15:04:05.999999999-07:00"
-	expTime, err := time.Parse(layout, expiration)
-
-	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("unauthorized")
-	}
-
-	if time.Now().After(expTime) {
-		return fmt.Errorf("token expired")
-	}
-
-	return c.Next()
 }
 
 func validateToken(tokenStr string) (jwt.MapClaims, error) {
