@@ -42,6 +42,16 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 	}
 }
 
+func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
+
+	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(bookings)
+}
+
 func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 	roomId, err := primitive.ObjectIDFromHex(c.Params("id"))
 

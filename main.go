@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/gadisamenu/hotel-reservation/api"
-	"github.com/gadisamenu/hotel-reservation/api/middlewares"
+	"github.com/gadisamenu/hotel-reservation/api/middleware"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,10 +45,12 @@ func main() {
 	userHanlder := api.NewUserHandler(userStore)
 	authHandler := api.NewAuthHandler(userStore)
 	roomHandler := api.NewRoomHandler(store)
+	bookingHandler := api.NewBookingHandler(store)
 
 	app := fiber.New(config)
 	auth := app.Group("/api")
-	appv1 := app.Group("/api/v1", middlewares.JWTAuthentication(userStore))
+	appv1 := app.Group("/api/v1", middleware.JWTAuthentication(userStore))
+	admin := appv1.Group("/admin", middleware.IsAdmin)
 
 	// handlers initialization
 
@@ -67,8 +69,16 @@ func main() {
 	appv1.Get("/hotels/:id", hotelHandler.HandleGetHotelById)
 	appv1.Get("/hotels/:id/rooms", hotelHandler.HandleGetRooms)
 
-	//booking handlers
+	//rooms handlers
+	appv1.Get("/rooms", roomHandler.HandleGetRooms)
 	appv1.Post("/rooms/:id/book", roomHandler.HandleBookRooms)
+	//TODO: cancel booking
+
+	//booking handlers
+	appv1.Get("/bookings/:id", bookingHandler.GetBookingById)
+
+	//admin handlers
+	admin.Get("/bookings", bookingHandler.GetBookings)
 
 	app.Listen(*listenAddr)
 }
