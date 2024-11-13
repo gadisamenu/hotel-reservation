@@ -1,12 +1,13 @@
 package api
 
 import (
-	"fmt"
+	"errors"
+	"net/http"
 
 	"github.com/gadisamenu/hotel-reservation/db"
-	"github.com/gadisamenu/hotel-reservation/types"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type BookingHandler struct {
@@ -28,16 +29,60 @@ func (h *BookingHandler) GetBookings(c *fiber.Ctx) error {
 	return c.JSON(bookings)
 }
 
-func (h *BookingHandler) GetBookingById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	user, ok := c.Context().UserValue("user").(*types.User)
+func (h *BookingHandler) CancelBooking(c *fiber.Ctx) error {
+	booking, err := h.store.Booking.GetBookingById(c.Context(), c.Params("id"))
 
-	if !ok {
-		return fmt.Errorf("unauthorized")
-	}
-	booking, err := h.store.Booking.GetBookingById(c.Context(), id, user.Id)
 	if err != nil {
 		return err
+	}
+
+	user, err := getAuthUser(c)
+	if err != nil {
+		return err
+	}
+
+	if booking.UserId != user.Id {
+		return c.Status(http.StatusUnauthorized).JSON(&genericResp{
+			Type: "error",
+			Msg:  "Unauthorized",
+		})
+	}
+
+	err = h.store.Booking.UpdateById(c.Context(), booking.Id.String(), bson.M{"canceled": true})
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(&genericResp{
+		Type: "success",
+		Msg:  "updated",
+	})
+}
+
+func (h *BookingHandler) GetBookingById(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	user, err := getAuthUser(c)
+	if err != nil {
+		return err
+	}
+
+	booking, err := h.store.Booking.GetBookingById(c.Context(), id)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.Status(http.StatusNotFound).JSON(&genericResp{
+				Type: "error",
+				Msg:  "booking not found",
+			})
+		}
+		return err
+	}
+
+	if booking.UserId != user.Id {
+		return c.Status(http.StatusUnauthorized).JSON(&genericResp{
+			Type: "error",
+			Msg:  "Unauthorized",
+		})
 	}
 
 	return c.JSON(booking)

@@ -13,9 +13,9 @@ import (
 )
 
 type BookingParams struct {
-	FromDate time.Time `json:"fromDate"`
-	ToDate   time.Time `json:"toDate"`
-	NoPerson int       `json:"noPerson"`
+	FromDate  time.Time `json:"fromDate"`
+	ToDate    time.Time `json:"toDate"`
+	NumPerson int       `json:"numPerson"`
 }
 
 func (bp *BookingParams) validate() error {
@@ -68,7 +68,10 @@ func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 		return err
 	}
 
-	user := c.Context().UserValue("user").(*types.User)
+	user, err := getAuthUser(c)
+	if err != nil {
+		return err
+	}
 
 	filter := bson.M{
 		"fromDate": bson.M{
@@ -93,11 +96,11 @@ func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 	}
 
 	booking := types.Booking{
-		UserId:   user.Id,
-		RoomId:   roomId,
-		FromDate: params.FromDate,
-		ToDate:   params.ToDate,
-		NoPerson: params.NoPerson,
+		UserId:    user.Id,
+		RoomId:    roomId,
+		FromDate:  params.FromDate,
+		ToDate:    params.ToDate,
+		NumPerson: params.NumPerson,
 	}
 
 	response, err := h.store.Booking.InsertBooking(c.Context(), &booking)

@@ -72,7 +72,7 @@ func main() {
 	//rooms handlers
 	appv1.Get("/rooms", roomHandler.HandleGetRooms)
 	appv1.Post("/rooms/:id/book", roomHandler.HandleBookRooms)
-	//TODO: cancel booking
+	appv1.Get("/rooms/:id/cancel", bookingHandler.CancelBooking)
 
 	//booking handlers
 	appv1.Get("/bookings/:id", bookingHandler.GetBookingById)
