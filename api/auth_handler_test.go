@@ -2,51 +2,28 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
-	"github.com/gadisamenu/hotel-reservation/db"
-	"github.com/gadisamenu/hotel-reservation/types"
+	"github.com/gadisamenu/hotel-reservation/db/fixtures"
 	"github.com/gofiber/fiber/v2"
 )
 
-func seedTestUser(t *testing.T, userStore db.UserStore) *types.User {
-	param := &types.CreateUserParam{
-		FirstName: "fTest",
-		LastName:  "lTest",
-		Email:     "test@gmail.com",
-		Password:  "password",
-	}
-
-	user, err := param.MapToUser()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = userStore.InsertUser(context.TODO(), user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return user
-}
-
 func TestAuthenticateWithWrongPassword(t *testing.T) {
 
-	testdb := setup()
+	testdb := setup(t)
 	defer testdb.teardown(t)
 
-	seedTestUser(t, testdb.UserStore)
+	fixtures.AddUser(testdb.Store, "james", "foo", false)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(testdb.UserStore)
+	authHandler := NewAuthHandler(testdb.User)
 
 	params := &AuthParams{
-		Email:    "test@gmail.com",
+		Email:    "james@foo.com",
 		Password: "passworddd",
 	}
 
@@ -77,17 +54,17 @@ func TestAuthenticateWithWrongPassword(t *testing.T) {
 
 func TestAuthenticateSuccess(t *testing.T) {
 
-	testdb := setup()
+	testdb := setup(t)
 	defer testdb.teardown(t)
 
-	insertedUser := seedTestUser(t, testdb.UserStore)
+	insertedUser := fixtures.AddUser(testdb.Store, "james", "foo", false)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(testdb.UserStore)
+	authHandler := NewAuthHandler(testdb.User)
 
 	params := &AuthParams{
-		Email:    "test@gmail.com",
-		Password: "password",
+		Email:    "james@foo.com",
+		Password: "james_foo",
 	}
 
 	app.Post("/", authHandler.HandleAuthenticate)

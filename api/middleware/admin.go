@@ -10,7 +10,6 @@ import (
 func IsAdmin(c *fiber.Ctx) error {
 
 	user, ok := c.Context().UserValue("user").(*types.User)
-
 	if !ok || !user.IsAdmin {
 		return fmt.Errorf("unauthorized")
 	}
