@@ -46,7 +46,7 @@ func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 
 	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
 	if err != nil {
-		return err
+		return ErrNotFound("rooms")
 	}
 
 	return c.JSON(bookings)
@@ -56,12 +56,12 @@ func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 	roomId, err := primitive.ObjectIDFromHex(c.Params("id"))
 
 	if err != nil {
-		return err
+		return ErrInvalidId()
 	}
 
 	var params BookingParams
 	if err := c.BodyParser(&params); err != nil {
-		return err
+		return ErrBadRequest()
 	}
 
 	if err := params.validate(); err != nil {
@@ -89,10 +89,7 @@ func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 	}
 
 	if len(bookings) > 0 {
-		return c.Status(http.StatusBadRequest).JSON(genericResp{
-			Type: "error",
-			Msg:  fmt.Sprintf("the room %s is already booked", roomId.Hex()),
-		})
+		return NewError(http.StatusBadRequest, fmt.Sprintf("the room %s is already booked", roomId.Hex()))
 	}
 
 	booking := types.Booking{
