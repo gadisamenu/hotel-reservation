@@ -16,6 +16,7 @@ import (
 func TestUserGetBooking(t *testing.T) {
 	db := setup(t)
 	defer db.teardown(t)
+
 	nonAuthUser := fixtures.AddUser(db.Store, "nonjames", "nonfoo", false)
 	user := fixtures.AddUser(db.Store, "james", "foo", false)
 	hotel := fixtures.AddHotel(db.Store, "Miracle", "New York", 5, nil)

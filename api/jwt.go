@@ -3,9 +3,9 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -61,7 +61,7 @@ func validateToken(tokenStr string) (jwt.MapClaims, error) {
 			return nil, ErrUnAuthorized()
 		}
 
-		secret := os.Getenv(("JWT_SECRET"))
+		secret := config.JWT_SECRET
 
 		return []byte(secret), nil
 

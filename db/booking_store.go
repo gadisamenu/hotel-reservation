@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,7 +28,7 @@ type MongoBookingStore struct {
 func NewMongoBookingStore(client *mongo.Client) *MongoBookingStore {
 	return &MongoBookingStore{
 		client: client,
-		coll:   client.Database(MongoDbname).Collection(bookingColl),
+		coll:   client.Database(config.DB_NAME).Collection(bookingColl),
 	}
 }
 

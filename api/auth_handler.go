@@ -3,9 +3,9 @@ package api
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gadisamenu/hotel-reservation/types"
 	"github.com/gofiber/fiber/v2"
@@ -54,7 +54,6 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 		return err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(params.Password)); err != nil {
-		// fmt.Println("here", err)
 		return ErrInvalidCredentials()
 	}
 
@@ -76,7 +75,8 @@ func createTokenFromUser(user *types.User) string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secret := os.Getenv("JWT_SECRET")
+	secret := config.JWT_SECRET
+
 	tokenStr, err := token.SignedString([]byte(secret))
 	if err != nil {
 		fmt.Println("failed to sign token with secret", err)

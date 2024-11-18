@@ -2,25 +2,23 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 
 	"github.com/gadisamenu/hotel-reservation/api"
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var config = fiber.Config{
+var fib_config = fiber.Config{
 	ErrorHandler: api.ErrorHandler,
 }
 
 func main() {
-	listenAddr := flag.String("listenAddr", ":5000", "The listen address for api server")
-	flag.Parse()
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DbUri))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.MONGO_DB_URI))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,7 +41,7 @@ func main() {
 	roomHandler := api.NewRoomHandler(store)
 	bookingHandler := api.NewBookingHandler(store)
 
-	app := fiber.New(config)
+	app := fiber.New(fib_config)
 	auth := app.Group("/api")
 	appv1 := app.Group("/api/v1", api.JWTAuthentication(userStore))
 	admin := appv1.Group("/admin", api.IsAdmin)
@@ -76,5 +74,5 @@ func main() {
 	//admin handlers
 	admin.Get("/bookings", bookingHandler.GetBookings)
 
-	app.Listen(*listenAddr)
+	app.Listen(config.HTTP_LISTEN_ADDRESS)
 }

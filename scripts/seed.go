@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gadisamenu/hotel-reservation/db/fixtures"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,15 +15,13 @@ import (
 )
 
 func main() {
-
 	ctx := context.Background()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(db.DbUri))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MONGO_DB_URI))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = client.Database(db.MongoDbname).Drop(ctx)
+	err = client.Database(config.DB_NAME).Drop(ctx)
 
 	if err != nil {
 		log.Fatal(err)
@@ -46,6 +45,7 @@ func main() {
 	from := time.Now()
 	till := from.AddDate(0, 0, 2)
 	booking := fixtures.AddBooking(store, user.Id, room.Id, 2, from, till)
+	fmt.Println("booking -> ", booking.Id)
 
 	for i := 0; i < 200; i++ {
 		name := fmt.Sprintf("hotel name %d", i)
@@ -53,5 +53,4 @@ func main() {
 		fixtures.AddHotel(store, name, location, rand.Intn(5)+1, nil)
 	}
 
-	fmt.Println("booking -> ", booking.Id)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gadisamenu/hotel-reservation/config"
 	"github.com/gadisamenu/hotel-reservation/db"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,14 +16,14 @@ type testdb struct {
 }
 
 func (tdb *testdb) teardown(t *testing.T) {
-	if err := tdb.client.Database(db.MongoDbname).Drop(context.TODO()); err != nil {
+	if err := tdb.client.Database(config.DB_NAME).Drop(context.TODO()); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func setup(t *testing.T) *testdb {
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DbUri))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.MONGO_DB_URI))
 	if err != nil {
 		t.Fatal(err)
 	}
