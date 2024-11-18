@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/gadisamenu/hotel-reservation/db"
@@ -45,6 +46,12 @@ func main() {
 	from := time.Now()
 	till := from.AddDate(0, 0, 2)
 	booking := fixtures.AddBooking(store, user.Id, room.Id, 2, from, till)
+
+	for i := 0; i < 200; i++ {
+		name := fmt.Sprintf("hotel name %d", i)
+		location := fmt.Sprintf("location %d", i)
+		fixtures.AddHotel(store, name, location, rand.Intn(5)+1, nil)
+	}
 
 	fmt.Println("booking -> ", booking.Id)
 }

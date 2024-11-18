@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const hotelColl = "hotels"
@@ -15,7 +16,7 @@ type HotelStore interface {
 	Dropper
 	Insert(context.Context, *types.Hotel) (*types.Hotel, error)
 	Update(context.Context, MapStr, MapStr) error
-	GetAll(context.Context, MapStr) ([]*types.Hotel, error)
+	GetAll(context.Context, MapStr, *Pagination) ([]*types.Hotel, error)
 	GetById(context.Context, string) (*types.Hotel, error)
 }
 
@@ -50,8 +51,11 @@ func (s *MongoHotelStore) Update(ctx context.Context, filter MapStr, update MapS
 	return err
 }
 
-func (s *MongoHotelStore) GetAll(ctx context.Context, filter MapStr) ([]*types.Hotel, error) {
-	res, err := s.coll.Find(ctx, filter)
+func (s *MongoHotelStore) GetAll(ctx context.Context, filter MapStr, pag *Pagination) ([]*types.Hotel, error) {
+	opt := &options.FindOptions{}
+	opt.SetSkip((pag.Page - 1) * pag.Limit)
+	opt.SetLimit(pag.Limit)
+	res, err := s.coll.Find(ctx, filter, opt)
 	if err != nil {
 		return nil, err
 	}
