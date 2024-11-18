@@ -5,7 +5,6 @@ import (
 
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -20,7 +19,7 @@ func NewBookingHandler(store *db.Store) *BookingHandler {
 }
 
 func (h *BookingHandler) GetBookings(c *fiber.Ctx) error {
-	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
+	bookings, err := h.store.Booking.GetBookings(c.Context(), db.MapStr{})
 	if err != nil {
 		return ErrNotFound("bookings")
 	}
@@ -44,7 +43,7 @@ func (h *BookingHandler) CancelBooking(c *fiber.Ctx) error {
 		return ErrUnAuthorized()
 	}
 
-	err = h.store.Booking.UpdateById(c.Context(), booking.Id.String(), bson.M{"canceled": true})
+	err = h.store.Booking.UpdateById(c.Context(), booking.Id.String(), db.MapStr{"canceled": true})
 	if err != nil {
 		return err
 	}

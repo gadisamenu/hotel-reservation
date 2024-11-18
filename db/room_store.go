@@ -14,7 +14,7 @@ const roomColl = "rooms"
 type RoomStore interface {
 	Dropper
 	Insert(context.Context, *types.Room) (*types.Room, error)
-	GetList(context.Context, bson.M) ([]*types.Room, error)
+	GetList(context.Context, MapStr) ([]*types.Room, error)
 }
 
 type MongoRoomStore struct {
@@ -42,8 +42,8 @@ func (s *MongoRoomStore) Insert(ctx context.Context, room *types.Room) (*types.R
 	}
 
 	room.Id = roomR.InsertedID.(primitive.ObjectID)
-	filter := bson.M{"_id": room.HotelId}
-	update := bson.M{"$push": bson.M{"rooms": room.Id}}
+	filter := MapStr{"_id": room.HotelId}
+	update := MapStr{"$push": bson.M{"rooms": room.Id}}
 
 	err = s.HotelStore.Update(ctx, filter, update)
 
@@ -54,7 +54,7 @@ func (s *MongoRoomStore) Insert(ctx context.Context, room *types.Room) (*types.R
 	return room, nil
 }
 
-func (s *MongoRoomStore) GetList(ctx context.Context, filter bson.M) ([]*types.Room, error) {
+func (s *MongoRoomStore) GetList(ctx context.Context, filter MapStr) ([]*types.Room, error) {
 	resp, err := s.coll.Find(ctx, filter)
 	if err != nil {
 		return nil, err

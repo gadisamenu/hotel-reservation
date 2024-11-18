@@ -44,7 +44,7 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 
-	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
+	bookings, err := h.store.Booking.GetBookings(c.Context(), db.MapStr{})
 	if err != nil {
 		return ErrNotFound("rooms")
 	}
@@ -73,7 +73,7 @@ func (h *RoomHandler) HandleBookRooms(c *fiber.Ctx) error {
 		return err
 	}
 
-	filter := bson.M{
+	filter := db.MapStr{
 		"fromDate": bson.M{
 			"$gte": params.FromDate,
 		},

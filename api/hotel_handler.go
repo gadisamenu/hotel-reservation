@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/gadisamenu/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,7 +18,7 @@ func NewHotelHandler(store *db.Store) *HotelHandler {
 
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 
-	filter := bson.M{}
+	filter := db.MapStr{}
 	hotels, err := h.store.Hotel.GetAll(c.Context(), filter)
 
 	if err != nil {
@@ -35,7 +34,7 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		return ErrInvalidId()
 	}
 
-	filter := bson.M{"hotelId": oid}
+	filter := db.MapStr{"hotelId": oid}
 	rooms, err := h.store.Room.GetList(c.Context(), filter)
 	if err != nil {
 		return ErrNotFound("rooms")
@@ -46,12 +45,7 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 func (h *HotelHandler) HandleGetHotelById(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return ErrInvalidId()
-	}
-
-	hotel, err := h.store.Hotel.GetById(c.Context(), oid)
+	hotel, err := h.store.Hotel.GetById(c.Context(), id)
 	if err != nil {
 		return ErrNotFound("hotel")
 	}

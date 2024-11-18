@@ -12,13 +12,15 @@ import (
 
 const userColl = "users"
 
+type MapStr map[string]any
+
 type UserStore interface {
 	Dropper
 	GetUserByEmail(context.Context, string) (*types.User, error)
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	InsertUser(context.Context, *types.User) (*types.User, error)
-	UpdateUser(c context.Context, filter bson.M, values types.UpdateUserParam) error
+	UpdateUser(c context.Context, filter MapStr, values types.UpdateUserParam) error
 	DeleteUser(context.Context, string) error
 }
 
@@ -53,12 +55,19 @@ func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParam) error {
+func (s *MongoUserStore) UpdateUser(ctx context.Context, filter MapStr, params types.UpdateUserParam) error {
+
 	update := bson.D{
 		{
-			"$set", params.ToBSON(),
+			Key: "$set", Value: params.ToBSON(),
 		},
 	}
+
+	oid, err := primitive.ObjectIDFromHex(filter["_id"].(string))
+	if err != nil {
+		return err
+	}
+	filter["_id"] = oid
 
 	res, err := s.coll.UpdateOne(ctx, filter, update)
 	if err != nil {
